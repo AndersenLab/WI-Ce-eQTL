@@ -817,10 +817,10 @@ ggsave(fig_S4, filename = paste("figures/p1_Supp_Fig4_eQTL_LD.png",sep = ""), un
 #### TajimaD
 
 #input
-data_figS4  <- data.table::fread("processed_data/FileS16_theta_pi_tjd.tsv")
+data_figS5  <- data.table::fread("processed_data/FileS16_theta_pi_tjd.tsv")
 
 
-SNP_0Miss_TjD_0.5cM_bin_median <- data_figS4 %>% 
+SNP_0Miss_TjD_0.5cM_bin_median <- data_figS5 %>% 
   dplyr::group_by(chrom,cM,pop_stats) %>% 
   dplyr::mutate(median_value=median(value)) %>% 
   dplyr::select(-start,-end,-value) %>% 
@@ -829,8 +829,8 @@ SNP_0Miss_TjD_0.5cM_bin_median <- data_figS4 %>%
 
 # PLOT
 plt_theta <- ggplot() +
-  geom_point(data=subset(data_figS4,pop_stats=="theta" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="gray70")+
-  geom_point(data=subset(data_figS4,pop_stats=="theta" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="red") +
+  geom_point(data=subset(data_figS5,pop_stats=="theta" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="gray70")+
+  geom_point(data=subset(data_figS5,pop_stats=="theta" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="red") +
   geom_line(data=subset(SNP_0Miss_TjD_0.5cM_bin_median,pop_stats=="theta"  ),
             aes(x=as.numeric(cM),y=as.numeric(median_value) ), size= 0.5,color="black") +
   facet_grid(.~chrom,scales="free") + 
@@ -841,9 +841,9 @@ plt_theta <- ggplot() +
         axis.text.x = element_blank())  
 
 plt_pi <- ggplot() +
-  geom_point(data=subset(data_figS4,pop_stats=="pi" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value)),
+  geom_point(data=subset(data_figS5,pop_stats=="pi" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value)),
              size=0.1,alpha=0.5,color="gray70")+
-  geom_point(data=subset(data_figS4,pop_stats=="pi" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value)),
+  geom_point(data=subset(data_figS5,pop_stats=="pi" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value)),
              size=0.1,alpha=0.5,color="red") +
   geom_line(data=subset(SNP_0Miss_TjD_0.5cM_bin_median,pop_stats=="pi"  ),
             aes(x=as.numeric(cM),y=as.numeric(median_value) ), size= 0.5,color="black")+
@@ -855,8 +855,8 @@ plt_pi <- ggplot() +
         axis.text.x = element_blank()) 
 
 plt_td <- ggplot() +
-  geom_point(data=subset(data_figS4,pop_stats=="td" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="gray70")+
-  geom_point(data=subset(data_figS4,pop_stats=="td" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="red") +
+  geom_point(data=subset(data_figS5,pop_stats=="td" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="gray70")+
+  geom_point(data=subset(data_figS5,pop_stats=="td" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="red") +
   geom_line(data=subset(SNP_0Miss_TjD_0.5cM_bin_median,pop_stats=="td"  ),
             aes(x=as.numeric(cM),y=as.numeric(median_value) ), size= 0.5,color="black") +
   facet_grid(.~chrom,scales="free") + 
@@ -867,61 +867,16 @@ plt_td <- ggplot() +
         axis.text.x = element_blank()) 
 
 
-
-
-
-bb <- ggpubr::compare_means(value ~ DiseQTL_Hotspot, group.by = "chrom", data = subset(data_figS4,pop_stats=="td"))
-
-
-
-tjd_chr <- ggplot(subset(data_figS4,pop_stats=="td"),aes(x=DiseQTL_Hotspot,y=value)) + 
-  facet_grid(. ~ chrom,scales = "free") + 
-  geom_boxplot(aes(color=DiseQTL_Hotspot),outlier.shape = NA ) +
-  scale_color_manual(values=c("Yes"="red","No"="gray70")) + 
-  theme_cust   + 
-  theme(legend.position = "none",
-        axis.title.x = element_blank(),
-        axis.text.x =  element_blank()) +
-  ggpubr::stat_compare_means(comparisons = list(c("Yes","No")),label.y = c(4), label = "p.signif") + 
-  labs(y=expression(paste("Tajima’s ", italic(D))),
-       color="Distant eQTL hotspot")
-
-
-tjd_all<- ggplot(subset(data_figS4,pop_stats=="td"),aes(x=DiseQTL_Hotspot,y=value)) + 
-  # facet_grid(. ~ chrom,scales = "free") + 
-  geom_boxplot(aes(color=DiseQTL_Hotspot),outlier.shape = NA ) +
-  scale_color_manual(values=c("No"="gray70","Yes"="red")) + 
-  theme_cust   + 
-  theme(legend.position = "none",
-        axis.title.x = element_blank(),
-        axis.text.x =  element_blank()) +
-  ggpubr::stat_compare_means(comparisons = list(c("Yes","No")),label.y = c(4), label = "p.signif") + 
-  labs(y=expression(paste("Tajima’s ", italic(D))),
-       x="Distant eQTL hotspot")
-
-
-
-
-
-## cow ###
-fig_S5de <- cowplot::plot_grid(tjd_all,  tjd_chr, 
-                                   labels = c('', 'e' ), 
-                                   rel_widths = c(1  ,3.5),
-                                   label_size = 12, 
-                                   label_fontfamily="Helvetica",
-                                   axis = "tblr",
-                                   align = "hv",
-                                   nrow = 1)
+ 
   
-fig_S5 <- cowplot::plot_grid(plt_theta, plt_pi, plt_td,fig_S5de,
-                              labels = c('a', 'b',"c","d"), 
-                              rel_heights = c(1,1,1,0.8),
-                              label_size = 12, 
+fig_S5 <- cowplot::plot_grid(plt_theta, plt_pi, plt_td, 
+                              labels = c('a', 'b',"c" ), 
+                               label_size = 12, 
                               label_fontfamily="Helvetica",
                               axis = "lr",
-                              nrow = 4)
+                              nrow = 3)
 
-ggsave(fig_S5, filename = paste("figures/p1_Supp_Fig5_TJD.png",sep = ""), units = "mm",height = 200, width = 160)
+ggsave(fig_S5, filename = paste("figures/p1_Supp_Fig5_TJD.png",sep = ""), units = "mm",height = 150, width = 160)
 
 
 #### Figure S6 ####
@@ -1017,7 +972,7 @@ ggsave(fig_S7, filename = paste("figures/p1_Supp_Fig7_dshotspot_tf_cof.png",sep 
  
 for( i in 1:length(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"), value = T))) {
   
-#  i=2
+#  i=13
   
   fine_file <-(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"), value = T)[i])
   
@@ -1025,11 +980,27 @@ for( i in 1:length(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"),
   
   data_figS8 <- data.table::fread(paste0("processed_data/",fine_file))  
   
+  
+  tf_cof <- unique(dplyr::filter(data_figS8,!TF=="")$fine_ext_gene)
+  
+  
+  for (tfc in tf_cof) {
+    
+   # tfc<- "hil-2"
+    
+    data_figS8_spe <- data_figS8 %>% 
+      dplyr::filter((!TF=="") & fine_ext_gene==tfc) %>% 
+      dplyr::distinct(transcript)
+   
+  
   fine_tf_raw <- data_figS8 %>% 
+    dplyr::filter(transcript %in% data_figS8_spe$transcript) %>% 
     dplyr::mutate(finemap_variant=as.numeric(sub("(.*)(_)(.*)","\\3",finemarker))) %>% 
     dplyr::filter(cM_marker==cMmarker ) %>% 
     dplyr::mutate(TF=ifelse(TF %in% c("modERN_TF","wormcat_TF"),"TF",
-                            ifelse(TF=="wormcat_chroma_cof","cof",NA)))
+                            ifelse(TF=="wormcat_chroma_cof","cof",NA))) %>% 
+  dplyr::mutate(impact=ifelse(impact %in% c("Intergenic", "LOW",tfc),impact,"HIGH"))
+ 
   
   fine_tf_peak_raw <- fine_tf_raw %>% 
     dplyr::distinct(transcript,QTL) %>% 
@@ -1039,10 +1010,7 @@ for( i in 1:length(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"),
   
   ntrait <- length(unique(fine_tf_peak_raw$transcript))
   
-  
-  
-  unique(fine_tf_raw$TF)
-  
+ 
   
   
   if(ntrait>24){
@@ -1087,7 +1055,7 @@ for( i in 1:length(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"),
     
     # plot_height <- ifelse((ceiling(ntrait/4))*40<200, ((ceiling(ntrait/4))*40+10),210)
     
-    ggsave(fine_tf_plt_1, filename = paste("figures/p1_Supp_Fig8_",cMmarker,"_1.png",sep = ""), units = "mm",height = 210, width = 175)
+    ggsave(fine_tf_plt_1, filename = paste("figures/p1_Supp_Fig8_",cMmarker,"_",tfc,"_1.png",sep = ""), units = "mm",height = 210, width = 175)
     
     
     
@@ -1131,7 +1099,7 @@ for( i in 1:length(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"),
     
     #plot_height <- ifelse((ceiling(ntrait/4))*40<200, ((ceiling(ntrait/4))*40+10),210)
     
-     ggsave(fine_tf_plt_2, filename = paste("figures/p1_Supp_Fig8_",cMmarker,"_2.png",sep = ""), units = "mm",height = 210, width = 175)
+     ggsave(fine_tf_plt_2, filename = paste("figures/p1_Supp_Fig8_",cMmarker,"_",tfc,"_2.png",sep = ""), units = "mm",height = 210, width = 175)
     
     
   } else {
@@ -1172,11 +1140,18 @@ for( i in 1:length(grep("FileS19_hotspotFine_TFs",list.files("processed_data/"),
     
      plot_height <- ifelse((ceiling(ntrait/4))*40<200, ((ceiling(ntrait/4))*40+10),210)
     
-    ggsave(fine_tf_plt, filename = paste("figures/p1_Supp_Fig8_",cMmarker,".png",sep = ""), units = "mm",height = plot_height, width = 175)
+    ggsave(fine_tf_plt, filename = paste("figures/p1_Supp_Fig8_",cMmarker,"_",tfc,".png",sep = ""), units = "mm",height = plot_height, width = 175)
     
  
     
   }
+  
+  
+  
+  
+  
+  }
+  
   
 }
 
@@ -1201,11 +1176,11 @@ fig_S9   <-   ggplot2::ggplot(data_figS9) +
   ggplot2::scale_shape_manual(values = c("0" = 20, 
                                          "1" = 20,
                                          "2" = 20,
-                                         "3" = 17))+
+                                         "3" = 25))+
   ggplot2::scale_size_manual(values = c("0" = 0.5, 
                                         "1" = 0.5,
                                         "2" = 0.5,
-                                        "3" = 1))+
+                                        "3" = 1.5))+
   ggplot2::geom_hline(ggplot2::aes(yintercept = BF),
                       color = "gray", 
                       alpha = .75,  
