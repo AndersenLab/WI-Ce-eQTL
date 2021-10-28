@@ -674,7 +674,7 @@ fig_5g <- cowplot::plot_grid(fig_5g_manh, fig_5g_med,
 
 fig_manh_med_abc <- cowplot::plot_grid(fig_5a,fig_5b,fig_5c,
                                        labels = c('a', 'b', 'c'), 
-                                       rel_widths = c(2.3 ,2,1.2),
+                                       rel_widths = c(2.3 ,3,1.4),
                                        label_size = 12, 
                                        label_fontfamily="Helvetica",
                                        nrow = 1)
