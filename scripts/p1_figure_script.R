@@ -138,7 +138,7 @@ ggsave(fig_1ac, filename = paste("figures/p1_Fig_1ac.png",sep = ""),  units = "m
 #### Genetic relatedness   
 load("processed_data/FileS3_trees.RData")
  
-fig_1d <- ggtree::ggtree(tree_full_genetic, layout="fan", branch.length="rate", size = 0.3,aes(color=label)) +
+fig_1d <- ggtree::ggtree(tree_nondiv_genetic, layout="fan", branch.length="rate", size = 0.3,aes(color=label)) +
   theme(legend.position = "none",
         panel.background = element_rect(fill = "transparent",colour = NA),  
       #  panel.grid.minor = theme_blank(), 
@@ -149,6 +149,9 @@ fig_1d <- ggtree::ggtree(tree_full_genetic, layout="fan", branch.length="rate", 
 
 
 ggsave(fig_1d, filename = paste("figures/p1_Fig_1d_gtree.png",sep = ""),  units = "mm",height = 200, width = 200)
+
+ 
+
 
 
 
@@ -197,11 +200,14 @@ fig_2a <- ggplot(data=data_fig2a)  +
         plot.margin = unit(c(2, 2, 0, 0), "mm"),
         panel.spacing = unit(0.01,"line"),
         axis.text=element_blank(),
-        axis.ticks=element_blank(),
-        legend.position = "none")  +
+        legend.position = "bottom",
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.spacing.x = unit(0.001, 'cm') ,
+        axis.ticks=element_blank())  +
   ylab("Transcript position (Mb)") + 
-  xlab("eQTL position (Mb)") +
-  labs(fill="eQTL classification")
+  xlab("eQTL position (Mb)")# +
+#  labs(color="eQTL classification")
  
 
 gt = ggplot_gtable(ggplot_build(fig_2a))
@@ -213,7 +219,7 @@ gt$heights[7] = 0.3*gt$heights[9]
  
 fig_2a_gt <- ggplotify::as.ggplot(gt) 
 
-
+fig_2a_gt
 
 
 #### Figure 2b #######
@@ -253,17 +259,26 @@ heri_eQTL <- data_fig2c  %>%
 
 
 fig_2c <- ggplot() + 
-  geom_point(data=subset(heri_eQTL,eQTL=="Traits without eQTL"),aes(y=h2,x=H2), size=0.05,alpha=0.5,color="black" ) +
-  geom_point(data=subset(heri_eQTL,eQTL=="Traits with eQTL"),aes(y=h2,x=H2), size=0.05,alpha=0.3,color="orange" ) +
+  geom_point(data=subset(heri_eQTL,eQTL=="Traits without eQTL"),aes(y=h2,x=H2,color=eQTL), size=0.05,alpha=0.5#,color="black" 
+             ) +
+  geom_point(data=subset(heri_eQTL,eQTL=="Traits with eQTL"),aes(y=h2,x=H2,color=eQTL), size=0.05,alpha=0.3#,color="orange" 
+             ) +
   theme_cust + 
-  theme(plot.margin = unit(c(2, 3, 0, 0), "mm")) +
+  scale_color_manual(values = c("Traits with eQTL"="orange","Traits without eQTL"="black") )+
+  theme(plot.margin = unit(c(2, 3, 0, 0), "mm"),
+        legend.position = "bottom",
+        legend.margin = margin(0,0,0,0),
+        legend.spacing.x = unit(0.001, 'cm') ,
+        legend.direction="vertical",
+        legend.box.margin=margin(-13,-10,0,-10),
+        legend.title = element_blank()) +
   xlab(expression(italic(H^2))) +
   ylab(expression(italic(h^2))) +
   geom_abline(intercept=0,slope=1,colour="black",linetype=2) +
   scale_y_continuous(breaks=c(0,0.5,  1),expand = c(0, 0), limits = c(0,1))  +
   scale_x_continuous(breaks=c(0, 0.5, 1),expand = c(0, 0), limits = c(0,1))
  
-  
+fig_2c
 
 
  
@@ -350,7 +365,7 @@ fig_2ab <- cowplot::plot_grid(fig_2a_gt, fig_2b ,
 
 fig_2cde <- cowplot::plot_grid(fig_2c,fig_2d, fig_2e,
                                labels = c('a','c', 'd'), 
-                               rel_heights  = c(1,2,1),
+                               rel_heights  = c(1.3,2,1),
                                label_size = 12, 
                                label_fontfamily="Helvetica",
                                axis = "lr",
@@ -379,24 +394,32 @@ ggsave(fig_2, filename = paste("figures/p1_Fig_2.png",sep = ""), units = "mm",he
 
  
 hotspot_pos <- data_fig2a %>% 
-  dplyr::distinct(hotspot_Chr, hotspot_cM, Hotspot, Hotspot_QTL_count) %>% na.omit() %>% 
-  dplyr::mutate(hotPOS = ifelse(Hotspot=="Yes",paste(hotspot_Chr, hotspot_cM,sep = "_"),NA))
+  dplyr::filter(!is.na(Hotspot)) %>% 
+  dplyr::mutate( Merged_hotspots_cM=ifelse(is.na(Merged_hotspots_cM) ,hotspot_cM,Merged_hotspots_cM),
+                merged_Hotspot_QTL_count=ifelse(is.na(merged_Hotspot_QTL_count) , Hotspot_QTL_count,merged_Hotspot_QTL_count)) %>% 
+  dplyr::distinct(hotspot_Chr, hotspot_cM, Hotspot,  Merged_hotspots_cM,merged_Hotspot_QTL_count ) %>% 
+  dplyr::group_by(hotspot_Chr,Merged_hotspots_cM) %>% 
+  dplyr::mutate(merged_Hotspot_center=mean(hotspot_cM))  %>% 
+  dplyr::ungroup() %>% 
+  dplyr::distinct(hotspot_Chr, Merged_hotspots_cM,merged_Hotspot_center, Hotspot, merged_Hotspot_QTL_count )  %>% 
+   dplyr::mutate(hotPOS = ifelse( grepl(",", Merged_hotspots_cM) , "merged",ifelse(Hotspot=="Yes","hotspot","no")))
 
 
-fig_3 <- ggplot(hotspot_pos,aes(x=hotspot_cM,y=Hotspot_QTL_count)) +
-  geom_bar(stat='identity',aes(fill=Hotspot)) +
+fig_3 <- ggplot(hotspot_pos,aes(x=merged_Hotspot_center,y=merged_Hotspot_QTL_count)) +
+  geom_bar(stat='identity',
+           aes(color=hotPOS),size=0.5) +
   facet_grid(.~hotspot_Chr,scales = "free_x" ) +
-  scale_fill_manual(values = c( "black", "red")) +
-  geom_hline(yintercept=12,  color="gray69",alpha=0.8) + 
+  scale_color_manual(values = c("red", "purple", "gray69")) +
+  geom_hline(yintercept=12,  color="black",alpha=0.8,linetype="dashed") + 
   ylab("Number of distant eQTL") +
   xlab("Hotspot position (cM)")  + 
   theme_cust  +
   theme(legend.position = "none",
-        axis.text.x = element_blank(),
-        panel.spacing = unit(0.1,"line"),
+      #  axis.text.x = element_blank(),
+       # panel.spacing = unit(0.1,"line"),
         axis.text.y =  ggplot2::element_text(size=12,  color = "black",angle = 90 ,vjust = 1,hjust=0.50)) +
-  scale_y_continuous(breaks=seq(0, 200, 100), limits = c(0,200),expand = c(0, 0)) +
-  scale_x_continuous(expand = c(0, 0) ) 
+  scale_y_continuous(breaks=seq(0, 200, 100), limits = c(0,200),expand = c(0, 0))  +
+   scale_x_continuous(breaks =  c(0, 15, 30, 45) ) 
 
 
 ggsave(fig_3, filename = paste("figures/p1_Fig_3.png",sep = ""), units = "mm",height = 60, width = 170)
@@ -450,7 +473,9 @@ fig_4a <- ggplot() +
 
 data_fig4b <- data.table::fread("processed_data/FileS8_ben1_corr.tsv")
 
-regressed_phe_all<-data_fig4b
+regressed_phe_all<- data_fig4b %>% 
+  dplyr::mutate(variant=ifelse(is.na(variantPOS),-1,1),
+                regressed_exp = residuals(lm(original_exp ~ variant)))  
 
 regressed_phe_all$ben1_prediction[is.na(regressed_phe_all$ben1_prediction)] <- "A"
 
@@ -467,33 +492,57 @@ corr<-cor.test(regressed_phe_all$original_pheno, regressed_phe_all$original_exp,
 
 estim<-format(corr$estimate,digits=2, nsmall = 2)
 
+cor_pvalue <- format(corr$p.value ,digits=2, nsmall = 2)
+
+
 #reged  
 
-corr_reg<-cor.test(regressed_phe_all$regressed_pheno, regressed_phe_all$original_exp, method = "pearson")
+#corr_reg<-cor.test(regressed_phe_all$regressed_pheno, regressed_phe_all$original_exp, method = "pearson")
+
+#estim_reg <- format(corr_reg$estimate,digits=2, nsmall = 2)
+
+#cor_pvalue_reg <- format(corr_reg$p.value ,digits=2, nsmall = 2)
+
+#reged  
+
+corr_reg<-cor.test(regressed_phe_all$original_pheno, regressed_phe_all$regressed_exp, method = "pearson")
 
 estim_reg <- format(corr_reg$estimate,digits=2, nsmall = 2)
 
+cor_pvalue_reg <- format(corr_reg$p.value ,digits=2, nsmall = 2)
 
 #
 
 regressed_phe_1 <- regressed_phe_all %>% 
   dplyr::select(strain, pheno= original_pheno, exp = original_exp,ben1_prediction ) %>% 
-  dplyr::mutate(type="Raw",pearson_cor=ifelse(strain=="AB1",estim,NA))
+  dplyr::mutate(type="Raw",
+                pearson_cor=ifelse(strain=="AB1",estim,NA),
+                pearson_p=ifelse(strain=="AB1",cor_pvalue,NA))
 
-regressed_phe_2 <- regressed_phe_all %>% 
-  dplyr::select(strain, pheno= regressed_pheno, exp = original_exp ,ben1_prediction) %>% 
-  dplyr::mutate(type="Regressed",pearson_cor=ifelse(strain=="AB1",estim_reg,NA))
+#regressed_phe_2 <- regressed_phe_all %>% 
+#  dplyr::select(strain, pheno= regressed_pheno, exp = original_exp ,ben1_prediction) %>% 
+#  dplyr::mutate(type="Regressed",pearson_cor=ifelse(strain=="AB1",estim_reg,NA),
+#                pearson_p=ifelse(strain=="AB1",cor_pvalue_reg,NA))
  
+regressed_phe_2 <- regressed_phe_all %>% 
+  dplyr::select(strain, pheno= original_pheno, exp = regressed_exp ,ben1_prediction) %>% 
+  dplyr::mutate(type="Regressed",pearson_cor=ifelse(strain=="AB1",estim_reg,NA),
+                pearson_p=ifelse(strain=="AB1",cor_pvalue_reg,NA))
 
-regressed_phe_cor <- dplyr::bind_rows(regressed_phe_1,regressed_phe_2)
-
+regressed_phe_cor <- dplyr::bind_rows(regressed_phe_1,regressed_phe_2)  %>% 
+  dplyr::mutate(pp="p")
  
 
 fig_4b <- ggplot() +
   geom_point(data=subset(regressed_phe_cor, ben1_prediction=="A"), aes(y=pheno,x=exp), color="gray75",size=0.3)+
   geom_point(data=subset(regressed_phe_cor, ben1_prediction!="A"), aes(y=pheno,x=exp,color= ben1_prediction) ,size=1 )+
-  geom_text(data= subset(regressed_phe_cor, strain=="AB1"), aes(label = paste("ρ",pearson_cor,sep = " : "), y=-136, x=3 ),color="gray6" )+ 
-  facet_grid(.~ type )+
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Raw"), aes(label = paste("ρ",pearson_cor,sep = " : "), y=-136, x=3 ),color="gray6" ) +
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Regressed"), aes(label = paste("ρ",pearson_cor,sep = " : "), y=-136, x=-0.3 ),color="gray6" )+ 
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Raw"), aes(label = paste0(": ",pearson_p ), y=-136, x=4.8 ),color="gray6" )+ 
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Raw"), aes(label = pp, y=-136, x=4.2,fontface=3 ),color="gray6"  )+ 
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Regressed"), aes(label = paste0(": ",pearson_p ), y=-136, x=1.4 ),color="gray6" )+ 
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Regressed"), aes(label = pp, y=-136, x=0.8,fontface=3 ),color="gray6"  )+ 
+  facet_grid(.~ type, scales = "free" )+
   xlab(expression(paste(italic('ben-1'), " expression"))) +
   ylab("Animal length") +
   labs(color=expression(paste("Variation at ", italic("ben-1"))))+
@@ -508,7 +557,7 @@ fig_4b <- ggplot() +
                        direction = "horizontal",nrow=5,
                        title.position = "top", title.hjust = 0.5
                      ))  
-
+fig_4b
  
 ######## figure 4c reg mapping ########
 
@@ -798,17 +847,18 @@ data_figS3 <- data.table::fread("processed_data/FileS14_eQTL_LD.tsv")
 
 # PLOT
 fig_S3 <- ggplot(data_figS3,aes(LD)) + 
-  geom_histogram(aes(fill=chroms),alpha=0.8,binwidth = 0.02,color="black") + 
+  geom_histogram(#aes(fill=chroms),
+                 alpha=0.8,binwidth = 0.02,color="black",fill="gray69") + 
   theme_cust +
   theme( legend.position = "bottom",
          legend.background = element_rect(),
          legend.title = element_blank())+
-  ylab("Number of LD values") + 
-  xlab("Pairwise LD among eQTL") +
-  guides(fill=guide_legend(nrow=2,byrow=TRUE)) +
-  facet_grid(.~ld_betw)  
+  ylab("Number of pairwise LD calculation") + 
+  xlab( expression(paste("Pairwise LD (", italic(r)^2,") among eQTL" ))) +
+ # guides(fill=guide_legend(nrow=2,byrow=TRUE)) +
+  facet_grid(chroms~ld_betw,scales = "free_y")  
 
-ggsave(fig_S3, filename = paste("figures/p1_Supp_Fig3_eQTL_LD.png",sep = ""), units = "mm",height = 100, width = 140)
+ggsave(fig_S3, filename = paste("figures/p1_Supp_Fig3_eQTL_LD.png",sep = ""), units = "mm",height = 170, width = 140)
 
 
 #### Figure S4 ####
@@ -888,11 +938,14 @@ ggsave(fig_S4, filename = paste("figures/p1_Supp_Fig4_TJD.png",sep = ""), units 
 #input
 data_figS5  <- data.table::fread("processed_data/FileS16_hotspot_gene_wormCat.tsv") %>% 
   dplyr::mutate(chr=sub("(.*)(:)(.*)","\\1",cM_marker),
-                cM=sub("(.*)(:)(.*)","\\3",cM_marker)) %>% 
+                cM=sub("(.*)(:)(.*)","\\3",cM_marker),
+                cM1=cM,
+                Bonferroni_log10=-log10(Bonferroni)) %>% 
   dplyr::filter(!grepl("Unknown",Category)) %>% 
-  dplyr::mutate( cM=as.numeric(cM)) %>% 
-  dplyr::arrange(chr,cM) %>% 
-  dplyr::group_by(chr,cM) %>% 
+  tidyr::separate(cM1, into=c("cM2","cM3"),sep=",") %>% 
+  dplyr::mutate( cM2=as.numeric(cM2)) %>% 
+  dplyr::arrange(chr,cM2) %>% 
+  dplyr::group_by(chr,cM2) %>% 
   dplyr::mutate(group_no = dplyr::group_indices( ))
 
 data_figS5$level= gsub("category", "Category ", data_figS5$level)
@@ -938,9 +991,12 @@ data_fig2a <- data.table::fread("processed_data/FileS4_eQTLmap.tsv")
 
 de_hotspot <- data_fig2a  %>% 
   dplyr::filter(Hotspot=="Yes") %>% 
-  dplyr::select(cM_Chr=hotspot_Chr,  cM=hotspot_cM, eQTL_Hotspot=Hotspot ) %>% 
+  dplyr::select(cM_Chr=hotspot_Chr,  cM=hotspot_cM, eQTL_Hotspot=Hotspot,Merged_hotspots_cM ) %>% 
   dplyr::distinct() %>% 
-  na.omit()
+  na.omit()%>% 
+  dplyr::group_by( cM_Chr,Merged_hotspots_cM) %>% 
+  dplyr::mutate(cM_center=mean(cM) ) %>% 
+  dplyr::select(-Merged_hotspots_cM)
 
 
 
@@ -949,14 +1005,25 @@ tf_bin <- data_figS6 %>%
   dplyr::group_by(type,cM_Chr,cM) %>% 
   dplyr::count(name="count") %>% 
   dplyr::left_join(de_hotspot) %>% 
-  dplyr::mutate(eQTL_Hotspot=ifelse(is.na(eQTL_Hotspot),"No",eQTL_Hotspot))
+  dplyr::mutate(eQTL_Hotspot=ifelse(is.na(eQTL_Hotspot),"No",eQTL_Hotspot),
+                cM_center=ifelse(is.na(cM_center),cM,cM_center)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(type,cM_Chr,cM_center) %>% 
+  dplyr::mutate(#cM=mean(cM),
+                count=sum(count)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(-cM) %>% 
+  dplyr::distinct()%>% 
+  dplyr::mutate(hotPOS = ifelse( grepl(",", Merged_hotspots_cM) , "merged",ifelse(eQTL_Hotspot=="Yes","hotspot","no")))
+
+
 
 # PLOT
 
-fig_S6 <- ggplot(tf_bin,aes(x=cM,y=count)) +
-  geom_bar(stat='identity',aes(fill=eQTL_Hotspot)) +
+fig_S6 <- ggplot(tf_bin,aes(x=cM_center,y=count)) +
+  geom_bar(stat='identity',aes(color=hotPOS),size=0.2) +
   facet_grid(type ~cM_Chr,scales = "free") +
-  scale_fill_manual(values = c( "black", "red")) +
+  scale_color_manual(values = c("red", "purple", "black")) +
   ylab("Counts") +
   xlab("cM ")  + 
   theme_cust  +
@@ -1261,35 +1328,41 @@ fig_S9a_gt <- ggplotify::as.ggplot(Sgt)
 
 
 RILhotspot_pos <- data_figS19 %>% 
-  dplyr::distinct(RILhotspot_Chr, RILhotspot_cM, RILHotspot, RILHotspot_QTL_count) %>% na.omit() %>% 
-  dplyr::mutate(hotPOS = paste(RILhotspot_Chr, RILhotspot_cM,sep = "_")) %>% 
-  dplyr::mutate(overlap_hot=ifelse(RILHotspot=="No","No",
-                                   ifelse(RILHotspot=="Yes" & (hotPOS %in% hotspot_pos$hotPOS), "Overlap","Yes")))
+  dplyr::filter(!is.na(RILHotspot)) %>% 
+  dplyr::mutate( Merged_RILHotspots_cM=ifelse(is.na(Merged_RILHotspots_cM) ,RILhotspot_cM,Merged_RILHotspots_cM),
+                 merged_RILHotspots_QTL_count=ifelse(is.na(merged_RILHotspots_QTL_count) , RILHotspot_QTL_count,merged_RILHotspots_QTL_count))  %>% 
+  dplyr::distinct(RILhotspot_Chr, RILhotspot_cM, RILHotspot,  Merged_RILHotspots_cM,merged_RILHotspots_QTL_count,Hotspots_Detected_in_WIeQTL ) %>% 
+  dplyr::group_by(RILhotspot_Chr,Merged_RILHotspots_cM) %>% 
+  dplyr::mutate(merged_Hotspot_center=mean(RILhotspot_cM))  %>% 
+  dplyr::ungroup() %>% 
+  dplyr::distinct(RILhotspot_Chr, Merged_RILHotspots_cM,merged_Hotspot_center, RILHotspot, merged_RILHotspots_QTL_count,Hotspots_Detected_in_WIeQTL )  %>% 
+  dplyr::mutate(hotPOS = ifelse( Hotspots_Detected_in_WIeQTL=="Yes" , "overlap",RILHotspot)) %>% 
+  dplyr::mutate(hotPOS=ifelse(is.na(hotPOS),"no",hotPOS))
 
 
-fig_S9b <- ggplot(RILhotspot_pos,aes(x=RILhotspot_cM,y=RILHotspot_QTL_count)) +
-  geom_bar(stat='identity',aes(fill=overlap_hot)) +
+fig_S9b <- ggplot(RILhotspot_pos,aes(x=merged_Hotspot_center,y=merged_RILHotspots_QTL_count)) +
+  geom_bar(stat='identity',
+           aes(color=hotPOS),size=0.5) +
   facet_grid(.~RILhotspot_Chr,scales = "free_x" ) +
-  scale_fill_manual(values = c( "black","blue", "red")) +
-  geom_hline(yintercept=6,  color="gray69",alpha=0.8) + 
+  scale_color_manual(values = c( "gray69", "blue","red")) +
+  geom_hline(yintercept=6,  color="black",alpha=0.8,linetype="dashed") + 
   ylab("Number of\ndistant eQTL") +
   xlab("Hotspot position (cM)")  + 
   theme_cust  +
   theme(legend.position = "none",
-        axis.text.x = element_blank(),
-        panel.spacing = unit(0.01,"line") ,
-       axis.text.y =  ggplot2::element_text(size=12,  color = "black",angle = 90 ,vjust = 1,hjust=0.50)
-        ) +
-  scale_y_continuous(breaks=seq(0, 80,40), limits = c(0,80),expand = c(0, 0)) +
-  scale_x_continuous(expand = c(0, 0) ) 
- 
+        #  axis.text.x = element_blank(),
+          panel.spacing = unit( 0.5,"line"),
+        axis.text.y =  ggplot2::element_text(size=12,  color = "black",angle = 90 ,vjust = 1,hjust=0.50),
+        axis.text.x =  ggplot2::element_text(size=10,  color = "black" )) +
+  scale_y_continuous(breaks=seq(0, 300, 150), limits = c(0,300),expand = c(0, 0))  +
+  scale_x_continuous(breaks =  c(0, 15, 30, 45), limits = c(0,NA) ) 
  
  
 fig_S9 <- cowplot::plot_grid(fig_S9a_gt, fig_S9b,  
                              labels = c('a', 'b'  ), 
                              label_size = 12, 
                              label_fontfamily="Helvetica",
-                             rel_heights = c(3,1),
+                             rel_heights = c(3,1.5),
                             
                              align = "v",
                             #   axis = "lr",
@@ -1297,4 +1370,47 @@ fig_S9 <- cowplot::plot_grid(fig_S9a_gt, fig_S9b,
 
 ggsave(fig_S9, filename = paste("figures/p1_Supp_Fig9_RIAILs_eQTL.png",sep = ""), units = "mm",height = 160, width = 120)
 
- 
+
+
+#### Figure S10 ####
+
+data_fig2a <- data.table::fread("processed_data/FileS4_eQTLmap.tsv")  
+
+data_figS20 <- data.table::fread("processed_data/FileS20_eqtlStudies13_Wi207eQTL_common.tsv")  
+
+data_figS20_count <- data_figS20 %>% 
+  dplyr::distinct( ens_gene,transcript, eQTL_Chr,eQTL_peak,study) %>% 
+  dplyr::group_by(ens_gene,transcript, eQTL_Chr,eQTL_peak ) %>% 
+  dplyr::count(name = "study_count")  %>% 
+  dplyr::left_join(data_fig2a) %>% 
+  dplyr::mutate(study_count=study_count+1)
+
+
+data_figS20_count$transcript_Chr[data_figS20_count$transcript_Chr=="MtDNA"] <- "M"
+data_figS20_count$eQTL_Chr[data_figS20_count$eQTL_Chr=="MtDNA"] <- "M"
+
+data_figS20_count$Chr_pos<- factor(data_figS20_count$transcript_Chr,levels = c("M","X","V","IV","III","II","I"))
+data_figS20_count$eChr_pos<- factor(data_figS20_count$eQTL_Chr,levels = c("I","II","III","IV","V","X","M"))
+
+
+fig_S10 <- ggplot(data=data_figS20_count)  + 
+  geom_point(aes(x=eQTL_peak/1E6,y=transcript_start,color=eQTL_classification,size=study_count),alpha=0.5) +
+  scale_color_manual(values = c("Distant eQTL"="plum4","Local eQTL"="gold2"), name="eQTL classification") +
+  facet_grid(cols=vars(eChr_pos), rows=vars(Chr_pos), 
+             scales = "free", 
+             switch="both") +
+  theme_cust +
+  theme( panel.border = element_rect(color = "grey", fill = NA, size = 1),
+        panel.spacing = unit(0.01,"line"),
+        axis.text=element_blank(),
+        axis.ticks=element_blank())  +
+  ylab("Transcript position (Mb)") + 
+  xlab("eQTL position (Mb)") +
+  scale_size_continuous(breaks=seq(2, 14, 3),name="Number of detections\nin 14 conditions\nacross nine studies" )
+
+
+ggsave(fig_S10, filename = paste("figures/p1_Supp_Fig10_eQTLacrossStudies.png",sep = ""), units = "mm",height = 130, width = 170)
+
+
+
+#########
