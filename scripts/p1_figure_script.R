@@ -150,16 +150,10 @@ fig_1d <- ggtree::ggtree(tree_nondiv_genetic, layout="fan", branch.length="rate"
 
 ggsave(fig_1d, filename = paste("figures/p1_Fig_1d_gtree.png",sep = ""),  units = "mm",height = 200, width = 200)
 
- 
-
-
-
-
 #### Figure 1e #####
 #### Exp relatedness  
 
-
-fig_1e <-  ggtree::ggtree(tree_ptc_ph_exp, 
+ fig_1e <-  ggtree::ggtree(tree_ptc_ph_exp, 
                                     layout="fan", 
                                     branch.length="rate", 
                                     size = 0.3,aes(color=label)) +
@@ -219,7 +213,7 @@ gt$heights[7] = 0.3*gt$heights[9]
  
 fig_2a_gt <- ggplotify::as.ggplot(gt) 
 
-fig_2a_gt
+#fig_2a_gt
 
 
 #### Figure 2b #######
@@ -278,7 +272,7 @@ fig_2c <- ggplot() +
   scale_y_continuous(breaks=c(0,0.5,  1),expand = c(0, 0), limits = c(0,1))  +
   scale_x_continuous(breaks=c(0, 0.5, 1),expand = c(0, 0), limits = c(0,1))
  
-fig_2c
+#fig_2c
 
 
  
@@ -494,14 +488,7 @@ estim<-format(corr$estimate,digits=2, nsmall = 2)
 
 cor_pvalue <- format(corr$p.value ,digits=2, nsmall = 2)
 
-
-#reged  
-
-#corr_reg<-cor.test(regressed_phe_all$regressed_pheno, regressed_phe_all$original_exp, method = "pearson")
-
-#estim_reg <- format(corr_reg$estimate,digits=2, nsmall = 2)
-
-#cor_pvalue_reg <- format(corr_reg$p.value ,digits=2, nsmall = 2)
+ 
 
 #reged  
 
@@ -518,11 +505,7 @@ regressed_phe_1 <- regressed_phe_all %>%
   dplyr::mutate(type="Raw",
                 pearson_cor=ifelse(strain=="AB1",estim,NA),
                 pearson_p=ifelse(strain=="AB1",cor_pvalue,NA))
-
-#regressed_phe_2 <- regressed_phe_all %>% 
-#  dplyr::select(strain, pheno= regressed_pheno, exp = original_exp ,ben1_prediction) %>% 
-#  dplyr::mutate(type="Regressed",pearson_cor=ifelse(strain=="AB1",estim_reg,NA),
-#                pearson_p=ifelse(strain=="AB1",cor_pvalue_reg,NA))
+ 
  
 regressed_phe_2 <- regressed_phe_all %>% 
   dplyr::select(strain, pheno= original_pheno, exp = regressed_exp ,ben1_prediction) %>% 
@@ -557,7 +540,7 @@ fig_4b <- ggplot() +
                        direction = "horizontal",nrow=5,
                        title.position = "top", title.hjust = 0.5
                      ))  
-fig_4b
+#fig_4b
  
 ######## figure 4c reg mapping ########
 
@@ -815,8 +798,9 @@ ggsave(fig_5, filename = paste("figures/p1_Fig_5.png",sep = ""), units = "mm",he
 #### wormCat enrichment of all genes with eQTL
 
 #input
-data_figS2  <- data.table::fread("processed_data/FileS13_all_eQTL_wormCat.tsv") %>% 
-  dplyr::filter(!grepl("Unknown",Category))
+
+data_figS2  <- data.table::fread("processed_data/Supp_Data_3.tsv") %>% 
+  dplyr::filter(Input=="All genes with eQTL")
 
 data_figS2$level= gsub("category", "Category ", data_figS2$level)
 # PLOT
@@ -843,7 +827,7 @@ ggsave(fig_S2, filename = paste("figures/p1_Supp_Fig2_eQTLenrich.png",sep = ""),
 #### A histogram showing the distribution of linkage disequilibrium (LD) 
 
 #input
-data_figS3 <- data.table::fread("processed_data/FileS14_eQTL_LD.tsv")
+data_figS3 <- data.table::fread("processed_data/FileS13_eQTL_LD.tsv")
 
 # PLOT
 fig_S3 <- ggplot(data_figS3,aes(LD)) + 
@@ -859,101 +843,29 @@ fig_S3 <- ggplot(data_figS3,aes(LD)) +
   facet_grid(chroms~ld_betw,scales = "free_y")  
 
 ggsave(fig_S3, filename = paste("figures/p1_Supp_Fig3_eQTL_LD.png",sep = ""), units = "mm",height = 170, width = 140)
-
-
+ 
 #### Figure S4 ####
-#### TajimaD
-
-#input
-data_figS4  <- data.table::fread("processed_data/FileS15_theta_pi_tjd.tsv")
-
-
-SNP_0Miss_TjD_0.5cM_bin_median <- data_figS4 %>% 
-  dplyr::group_by(chrom,cM,pop_stats) %>% 
-  dplyr::mutate(median_value=median(value)) %>% 
-  dplyr::select(-start,-end,-value) %>% 
-  dplyr::distinct()
-
-
-# PLOT
-plt_theta <- ggplot() +
-  geom_point(data=subset(data_figS4,pop_stats=="theta" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="gray70")+
-  geom_point(data=subset(data_figS4,pop_stats=="theta" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="red") +
-  geom_line(data=subset(SNP_0Miss_TjD_0.5cM_bin_median,pop_stats=="theta"  ),
-            aes(x=as.numeric(cM),y=as.numeric(median_value) ), size= 0.5,color="black") +
-  facet_grid(.~chrom,scales="free") + 
-  labs(y=expression(paste("Watterson’s theta (", italic(θ),")")),
-       x="Genomic position (cM)")+
-  theme_cust  +
-  theme(legend.position = "none",
-        axis.text.x = element_blank())  
-
-plt_pi <- ggplot() +
-  geom_point(data=subset(data_figS4,pop_stats=="pi" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value)),
-             size=0.1,alpha=0.5,color="gray70")+
-  geom_point(data=subset(data_figS4,pop_stats=="pi" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value)),
-             size=0.1,alpha=0.5,color="red") +
-  geom_line(data=subset(SNP_0Miss_TjD_0.5cM_bin_median,pop_stats=="pi"  ),
-            aes(x=as.numeric(cM),y=as.numeric(median_value) ), size= 0.5,color="black")+
-  facet_grid(.~chrom,scales="free") + 
-  labs(y="Pi",
-       x="Genomic position (cM)")+
-  theme_cust  +
-  theme(legend.position = "none",
-        axis.text.x = element_blank()) 
-
-plt_td <- ggplot() +
-  geom_point(data=subset(data_figS4,pop_stats=="td" & DiseQTL_Hotspot=="No"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="gray70")+
-  geom_point(data=subset(data_figS4,pop_stats=="td" & DiseQTL_Hotspot=="Yes"),aes(x=as.numeric(cM),y=as.numeric(value) ), size=0.1,alpha=0.5,color="red") +
-  geom_line(data=subset(SNP_0Miss_TjD_0.5cM_bin_median,pop_stats=="td"  ),
-            aes(x=as.numeric(cM),y=as.numeric(median_value) ), size= 0.5,color="black") +
-  facet_grid(.~chrom,scales="free") + 
-  labs(y=expression(paste("Tajima’s ", italic(D))),
-       x="Genomic position (cM)")+
-  theme_cust  +
-  theme(legend.position = "none",
-        axis.text.x = element_blank()) 
-
-
- 
-  
-fig_S4 <- cowplot::plot_grid(plt_theta, plt_pi, plt_td, 
-                              labels = c('a', 'b',"c" ), 
-                               label_size = 12, 
-                              label_fontfamily="Helvetica",
-                              axis = "lr",
-                              nrow = 3)
-
-ggsave(fig_S4, filename = paste("figures/p1_Supp_Fig4_TJD.png",sep = ""), units = "mm",height = 150, width = 160)
-
- 
-
-
-
-
-#### Figure S5 ####
 #### wormCat enrichment of genes with distant eQTL in each hotspot
- 
-
+  
 #input
-data_figS5  <- data.table::fread("processed_data/FileS16_hotspot_gene_wormCat.tsv") %>% 
-  dplyr::mutate(chr=sub("(.*)(:)(.*)","\\1",cM_marker),
-                cM=sub("(.*)(:)(.*)","\\3",cM_marker),
-                cM1=cM,
+data_figS4  <- data.table::fread("processed_data/Supp_Data_3.tsv") %>% 
+  dplyr::filter(Input=="Genes with distant eQTL in each merged hotspot") %>% 
+  dplyr::mutate( cM1=Merged_hotspot_cM,
                 Bonferroni_log10=-log10(Bonferroni)) %>% 
   dplyr::filter(!grepl("Unknown",Category)) %>% 
   tidyr::separate(cM1, into=c("cM2","cM3"),sep=",") %>% 
   dplyr::mutate( cM2=as.numeric(cM2)) %>% 
-  dplyr::arrange(chr,cM2) %>% 
-  dplyr::group_by(chr,cM2) %>% 
-  dplyr::mutate(group_no = dplyr::group_indices( ))
+  dplyr::arrange(hotspot_Chr,cM2) %>% 
+  dplyr::group_by(hotspot_Chr,cM2) %>% 
+  dplyr::mutate(group_no = dplyr::group_indices( )) %>% 
+  dplyr::mutate(cM_marker=paste(hotspot_Chr,Merged_hotspot_cM,sep=":" ))
 
-data_figS5$level= gsub("category", "Category ", data_figS5$level)
+data_figS4$level= gsub("category", "Category ", data_figS4$level)
 
 
 # PLOT
 
-fig_S5 <- ggplot(data_figS5,
+fig_S4 <- ggplot(data_figS4,
                   aes(x=fct_reorder(cM_marker, group_no),y=Category, color=Bonferroni_log10)) +
   geom_point() + 
   theme_bw() + 
@@ -973,270 +885,117 @@ fig_S5 <- ggplot(data_figS5,
        color = expression(-log[10](adjusted~italic(p)))) + 
   facet_grid( level~.,scales = "free",space = "free")  
 
-ggsave(fig_S5, filename = paste("figures/p1_Supp_Fig5_HSenrich.png",sep = ""), units = "mm",height = 225, width = 170)
+ggsave(fig_S4, filename = paste("figures/p1_Supp_Fig4_HSenrich.png",sep = ""), units = "mm",height = 225, width = 170)
 
 
 
 
-#### Figure S6 ####
-
-#### TFs in hotspots 
+#### Figure S5 ####
  
-#input
-data_figS6  <- data.table::fread("processed_data/FileS17_hotspot_TFs.tsv") 
-
-
-
-data_fig2a <- data.table::fread("processed_data/FileS4_eQTLmap.tsv")  
-
-de_hotspot <- data_fig2a  %>% 
-  dplyr::filter(Hotspot=="Yes") %>% 
-  dplyr::select(cM_Chr=hotspot_Chr,  cM=hotspot_cM, eQTL_Hotspot=Hotspot,Merged_hotspots_cM ) %>% 
-  dplyr::distinct() %>% 
-  na.omit()%>% 
-  dplyr::group_by( cM_Chr,Merged_hotspots_cM) %>% 
-  dplyr::mutate(cM_center=mean(cM) ) %>% 
-  dplyr::select(-Merged_hotspots_cM)
-
-
-
-tf_bin <- data_figS6 %>% 
-  dplyr::mutate(type=ifelse(grepl("TF",source),"Transcription factor","Chromatin cofactor")) %>% 
-  dplyr::group_by(type,cM_Chr,cM) %>% 
-  dplyr::count(name="count") %>% 
-  dplyr::left_join(de_hotspot) %>% 
-  dplyr::mutate(eQTL_Hotspot=ifelse(is.na(eQTL_Hotspot),"No",eQTL_Hotspot),
-                cM_center=ifelse(is.na(cM_center),cM,cM_center)) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::group_by(type,cM_Chr,cM_center) %>% 
-  dplyr::mutate(#cM=mean(cM),
-                count=sum(count)) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::select(-cM) %>% 
-  dplyr::distinct()%>% 
-  dplyr::mutate(hotPOS = ifelse( grepl(",", Merged_hotspots_cM) , "merged",ifelse(eQTL_Hotspot=="Yes","hotspot","no")))
-
-
-
-# PLOT
-
-fig_S6 <- ggplot(tf_bin,aes(x=cM_center,y=count)) +
-  geom_bar(stat='identity',aes(color=hotPOS),size=0.2) +
-  facet_grid(type ~cM_Chr,scales = "free") +
-  scale_color_manual(values = c("red", "purple", "black")) +
-  ylab("Counts") +
-  xlab("cM ")  + 
-  theme_cust  +
-  theme(legend.position = "none",
-        axis.text.x = element_blank())   
-
+# plot 
+data_figS5 <- data.table::fread("processed_data/FileS14_hil2_enrich_finemap.tsv")
+ 
+fine_tf_raw <- data_figS5 %>% 
+  dplyr::mutate(finemap_variant=as.numeric(sub("(.*)(_)(.*)","\\3",finemarker))) %>% 
+  dplyr::mutate(TF=ifelse(TF %in% c("modERN_TF","wormcat_TF"),"TF",
+                          ifelse(TF=="wormcat_chroma_cof","cof",NA)) ) %>% 
+  dplyr::mutate(impact=dplyr::case_when(
+    impact=="hil-2" & BLOSUM <0  ~ "hil-2",
+    BLOSUM <0 ~ "HIGH",
+    BLOSUM >=0 ~ "LOW",
+    TRUE ~ "Intergenic")) %>% 
+  dplyr::mutate(cate2=dplyr::case_when(
+    Category=="Development: somatic"  ~ "Development\nsomatic",
+    Category=="Proteolysis proteasome: E3: F box"  ~ "Proteolysis proteasome\nE3: F box",
+    Category=="Transcription factor: homeodomain" ~ "Transcription factor\nhomeodomain",
+    TRUE ~ "Stress response\nheat")) %>% 
+  dplyr::filter(Merged_hotspots_cM=="30.5, 31, 31.5, 32, 32.5" & grepl("IV",QTL))%>% 
+  dplyr::mutate(transcript=paste(GeneName,transcript,sep = "\n"))
  
 
-ggsave(fig_S6, filename = paste("figures/p1_Supp_Fig6_dshotspot_tf_cof.png",sep = ""), units = "mm",height = 120, width = 170)
+fine_tf_peak_raw <- fine_tf_raw %>% 
+ # dplyr::filter(Category==cat) %>% 
+  dplyr::distinct(transcript,QTL) %>% 
+  dplyr::mutate(eQTL_peak=as.numeric(sub("(.*)(_)(.*)","\\3",QTL)))%>% 
+  na.omit() %>% 
+  dplyr::mutate(eQTL_peak= as.numeric(eQTL_peak)) 
 
 
-#### Figure S7 ####
-#fine mappings 
+hil2_fine_plt_list=list()
 
- 
-for( i in 1:length(grep("FileS18_hotspotFine_TFs",list.files("processed_data/"), value = T))) {
+for(cat in unique(fine_tf_raw$Category)) {
   
-#  i=13
+  fine_tf <- fine_tf_raw   %>% dplyr::filter(Category==cat)
   
-  fine_file <-(grep("FileS18_hotspotFine_TFs",list.files("processed_data/"), value = T)[i])
-  
-  cMmarker <- sub("(FileS18_hotspotFine_TFs_)(.*)(.tsv)","\\2",fine_file)
-  
-  data_figS7 <- data.table::fread(paste0("processed_data/",fine_file))  
-  
-  
-  tf_cof <- unique(dplyr::filter(data_figS7,!TF=="")$fine_ext_gene)
-  
-  
-  for (tfc in tf_cof) {
-    
-   # tfc<- "hil-2"
-    
-    data_figS7_spe <- data_figS7 %>% 
-      dplyr::filter((!TF=="") & fine_ext_gene==tfc) %>% 
-      dplyr::distinct(transcript)
-   
-  
-  fine_tf_raw <- data_figS7 %>% 
-    dplyr::filter(transcript %in% data_figS7_spe$transcript) %>% 
-    dplyr::mutate(finemap_variant=as.numeric(sub("(.*)(_)(.*)","\\3",finemarker))) %>% 
-    dplyr::filter(cM_marker==cMmarker ) %>% 
-    dplyr::mutate(TF=ifelse(TF %in% c("modERN_TF","wormcat_TF"),"TF",
-                            ifelse(TF=="wormcat_chroma_cof","cof",NA))) %>% 
-  dplyr::mutate(impact=ifelse(impact %in% c("Intergenic", "LOW",tfc),impact,"HIGH"))
- 
-  
-  fine_tf_peak_raw <- fine_tf_raw %>% 
+  fine_tf_peak  <- fine_tf   %>% 
     dplyr::distinct(transcript,QTL) %>% 
     dplyr::mutate(eQTL_peak=as.numeric(sub("(.*)(_)(.*)","\\3",QTL)))%>% 
     na.omit() %>% 
-    dplyr::mutate(eQTL_peak= as.numeric(eQTL_peak))
-  
-  ntrait <- length(unique(fine_tf_peak_raw$transcript))
-  
- 
+    dplyr::mutate(eQTL_peak= as.numeric(eQTL_peak)) 
   
   
-  if(ntrait>24){
-    
-    
-    half_trait <- sample( fine_tf_peak_raw$transcript, ntrait/2)
-    
-    
-    fine_tf_1 <- fine_tf_raw %>% 
-      dplyr::filter(transcript %in% half_trait )
-    
-    fine_tf_peak_1  <- fine_tf_peak_raw %>% 
-      dplyr::filter(transcript %in% half_trait )
-    
-    
-    
-    
-    fine_tf_plt_1 <- ggplot() +
-      geom_point(data=subset(fine_tf_1, impact == "Intergenic"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray80") + 
-      geom_point(data=subset(fine_tf_1, impact == "LOW"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray50") + 
-      geom_point(data=subset(fine_tf_1, impact == "HIGH"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="orange")+
-      geom_point(data=subset(fine_tf_1, !impact %in% c("Intergenic","LOW","HIGH")),aes(x=finemap_variant/1e6,y=finemap_log10p, color=impact ),size=2,shape=18 )+
-      geom_point(data = fine_tf_peak_1,aes(x=eQTL_peak/1e6,y = 0 ), size = 1 , alpha = 1, shape = 25, stroke = 0.5,color="black",fill="plum4") +
-      facet_wrap(.~transcript, scales = "free",ncol=4) + 
-      theme_cust+
-      theme( legend.text = ggplot2::element_text(size=12, color = "black",face = "italic"),
-             legend.position = "bottom",
-             plot.title = ggplot2::element_text(size=12,  color = "black"),
-             axis.ticks.x = element_blank(),
-             axis.text.x = element_blank(),
-             panel.spacing = unit(0.01,"line"),
-             plot.margin = unit(c(0, 2, 0, 2), "mm"),
-             strip.text = ggplot2::element_text(size=11, vjust = 1,  color = "black",face = "italic")) +
-      scale_color_manual(values = c( "red", "deepskyblue4", "blue",  "purple")) +
-      labs(x="Genomic position (Mb)",
-           color="Candidate genes",
-           y=expression(-log[10](italic(p)))) +
-      ggtitle( paste("Chromosome",sub("(.*)(_)(.*)","\\1:",cMmarker),sub("(.*)(_)(.*)","\\3",cMmarker),"cM" ))
-    
-    
- 
-    
-    # plot_height <- ifelse((ceiling(ntrait/4))*40<200, ((ceiling(ntrait/4))*40+10),210)
-    
-    ggsave(fine_tf_plt_1, filename = paste("figures/p1_Supp_Fig7_",cMmarker,"_",tfc,"_1.png",sep = ""), units = "mm",height = 210, width = 175)
-    
-    
-    
-    
-    fine_tf_2 <- fine_tf_raw %>% 
-      dplyr::filter(!transcript %in% half_trait )
-    
-    fine_tf_peak_2  <- fine_tf_peak_raw %>% 
-      dplyr::filter(!transcript %in% half_trait )
-    
-    
-    
-    
-    fine_tf_plt_2 <- ggplot() +
-      geom_point(data=subset(fine_tf_2, impact == "Intergenic"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray80") + 
-      geom_point(data=subset(fine_tf_2, impact == "LOW"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray50") + 
-      geom_point(data=subset(fine_tf_2, impact == "HIGH"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="orange")+
-      geom_point(data=subset(fine_tf_2, !impact %in% c("Intergenic","LOW","HIGH")),
-                 aes(x=finemap_variant/1e6,y=finemap_log10p, color=impact  ),size=2,shape=18)+
-      geom_point(data = fine_tf_peak_2,aes(x=eQTL_peak/1e6,y = 0 ), size = 1 , alpha = 1, shape = 25, stroke = 0.5,color="black",fill="plum4") +
-      facet_wrap(.~transcript, scales = "free",ncol=4) + 
-      theme_cust+
-      theme( legend.text = ggplot2::element_text(size=12, color = "black",face = "italic"),
-             plot.title = ggplot2::element_text(size=12,  color = "black"),
-             legend.position = "bottom",
-             axis.ticks.x = element_blank(),
-             axis.text.x = element_blank(),
-             panel.spacing = unit(0.01,"line"),
-             plot.margin = unit(c(0, 2, 0, 2), "mm"),
-             strip.text = ggplot2::element_text(size=11, vjust = 1,  color = "black",face = "italic")) +
-      scale_color_manual(values = c( "red", "deepskyblue4", "blue",  "purple")) +
-      #  scale_shape_manual(values = c("TF"=18,"cof"=16)) +
-      labs(x="Genomic position (Mb)",
-           color="Candidate genes",
-           y=expression(-log[10](italic(p)))) +
-      ggtitle( paste("Chromosome",sub("(.*)(_)(.*)","\\1:",cMmarker),sub("(.*)(_)(.*)","\\3",cMmarker),"cM" ))
-    
-    
+  fine_tf_plt1 <- ggplot() +
+    geom_point(data=subset(fine_tf, impact == "Intergenic"  ),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray80") + 
+    geom_point(data=subset(fine_tf, impact == "LOW"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray50") + 
+    geom_point(data=subset(fine_tf, impact == "HIGH"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="orange")+
+    geom_point(data=subset(fine_tf, !impact %in% c("Intergenic","LOW","HIGH")),
+               aes(x=finemap_variant/1e6,y=finemap_log10p, color=impact  ),size=2,shape=18 )+
+    geom_point(data = fine_tf_peak,aes(x=eQTL_peak/1e6,y = 0 ), size = 1 , alpha = 1, shape = 25, stroke = 0.5,color="black",fill="plum4") +
+    #  facet_wrap(Category~transcript, scales = "free",ncol=4) + 
+    facet_grid(cate2~transcript, scales = "free" ) + 
+    theme_cust+
+    theme( legend.text = ggplot2::element_text(size=12, color = "black",face = "italic"),
+           plot.title = ggplot2::element_text(size=12,  color = "black"),
+           legend.position = "none",
+           #   axis.ticks.x = element_blank(),
+           #   axis.text.x = element_blank(),
+           panel.spacing = unit(0.01,"line"),
+           plot.margin = unit(c(0, 2, 0, 2), "mm"),
+           strip.text.y = ggplot2::element_text(size=11, vjust = 1,  color = "black" ),
+           strip.text.x = ggplot2::element_text(size=11, vjust = 1,  color = "black",face = "italic")) +
+    scale_color_manual(values = c( "red", "deepskyblue4", "blue",  "purple")) +
+    #  scale_shape_manual(values = c("TF"=18,"cof"=15), guide = "none") +
+    labs(x="Genomic position (Mb)",
+         color="Candidate genes",
+         y=expression(-log[10](italic(p))))  +
+    scale_x_continuous(breaks=c(4,6,8,10,12,14,16) )+
+    scale_y_continuous(breaks=c(0,5,10,15,20,25) )
   
-    
-    
-    #plot_height <- ifelse((ceiling(ntrait/4))*40<200, ((ceiling(ntrait/4))*40+10),210)
-    
-     ggsave(fine_tf_plt_2, filename = paste("figures/p1_Supp_Fig7_",cMmarker,"_",tfc,"_2.png",sep = ""), units = "mm",height = 210, width = 175)
-    
-    
-  } else {
-    
-    
-    fine_tf <- fine_tf_raw  
-    
-    fine_tf_peak  <- fine_tf_peak_raw  
-    
-    fine_tf_plt <- ggplot() +
-      geom_point(data=subset(fine_tf, impact == "Intergenic"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray80") + 
-      geom_point(data=subset(fine_tf, impact == "LOW"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="gray50") + 
-      geom_point(data=subset(fine_tf, impact == "HIGH"),aes(x=finemap_variant/1e6,y=finemap_log10p ),size=0.1, color="orange")+
-      # geom_segment( data = subset(fine_tf, !impact %in% c("Intergenic","LOW","HIGH")), arrow = arrow(length = unit(5, "points")), 
-      #              aes(x = finemap_variant/1e6,xend = finemap_variant/1e6, y = finemap_log10p, yend = finemap_log10p - 0.5 , color=impact) ) + 
-      geom_point(data=subset(fine_tf, !impact %in% c("Intergenic","LOW","HIGH")),
-                 aes(x=finemap_variant/1e6,y=finemap_log10p, color=impact  ),size=2,shape=18 )+
-      geom_point(data = fine_tf_peak,aes(x=eQTL_peak/1e6,y = 0 ), size = 1 , alpha = 1, shape = 25, stroke = 0.5,color="black",fill="plum4") +
-      facet_wrap(.~transcript, scales = "free",ncol=4) + 
-      theme_cust+
-      theme( legend.text = ggplot2::element_text(size=12, color = "black",face = "italic"),
-             plot.title = ggplot2::element_text(size=12,  color = "black"),
-             legend.position = "bottom",
-             axis.ticks.x = element_blank(),
-             axis.text.x = element_blank(),
-             panel.spacing = unit(0.01,"line"),
-             plot.margin = unit(c(0, 2, 0, 2), "mm"),
-             strip.text = ggplot2::element_text(size=11, vjust = 1,  color = "black",face = "italic")) +
-      scale_color_manual(values = c( "red", "deepskyblue4", "blue",  "purple")) +
-      #  scale_shape_manual(values = c("TF"=18,"cof"=15), guide = "none") +
-      labs(x="Genomic position (Mb)",
-           color="Candidate genes",
-           y=expression(-log[10](italic(p)))) +
-      ggtitle( paste("Chromosome",sub("(.*)(_)(.*)","\\1:",cMmarker),sub("(.*)(_)(.*)","\\3",cMmarker),"cM" ))
-    
-    
-    
-    
-     plot_height <- ifelse((ceiling(ntrait/4))*40<200, ((ceiling(ntrait/4))*40+10),210)
-    
-    ggsave(fine_tf_plt, filename = paste("figures/p1_Supp_Fig7_",cMmarker,"_",tfc,".png",sep = ""), units = "mm",height = plot_height, width = 175)
-    
- 
-    
-  }
-  
-  
-  
-  
-  
-  }
-  
-  
+  hil2_fine_plt_list[[cat]] <- fine_tf_plt1
 }
 
 
+fig_S5cd <- cowplot::plot_grid(hil2_fine_plt_list$`Stress response: heat`, hil2_fine_plt_list$`Transcription factor: homeodomain`,  
+                               labels = c('', 'c'  ), 
+                               label_size = 12, 
+                               label_fontfamily="Helvetica",
+                               rel_widths  = c(2.5,3),
+                               
+                               align = "h",
+                               axis = "tb",
+                               nrow = 1)
+
+
+fig_S5 <- cowplot::plot_grid( hil2_fine_plt_list$`Proteolysis proteasome: E3: F box`, fig_S5cd, 
+  labels = c('a', 'b'   ), 
+  label_size = 12, 
+  label_fontfamily="Helvetica",
+  #  rel_widths  = c(2,3),
+  #  rel_heights = 
+  axis = "lr",
+  # align = "v",
+  
+  nrow = 2)
+
+ggsave(fig_S5, filename = paste("figures/p1_Supp_Fig5_hil2.png",sep = ""), units = "mm",height = 130, width = 170)
+
  
+#### Figure S6 ####
+data_figS6 <- data.table::fread("processed_data/FileS10_ABZ_GWA.tsv")  
 
+data_figS6$dataset2 = factor( data_figS6$dataset,levels = c("202 strains","167 strains"))
 
-
-
-
-#### Figure S8 ####
-data_figS8 <- data.table::fread("processed_data/FileS10_ABZ_GWA.tsv")  
-
-data_figS8$dataset2 = factor( data_figS8$dataset,levels = c("202 strains","167 strains"))
-
-fig_S8   <-   ggplot2::ggplot(data_figS8) +
+fig_S6   <-   ggplot2::ggplot(data_figS6) +
   ggplot2::aes(x = POS/1e6, y = log10p) +
   ggplot2::scale_color_manual(values = c("0" = "black", 
                                          "1" = "red",
@@ -1269,7 +1028,7 @@ fig_S8   <-   ggplot2::ggplot(data_figS8) +
                 y = expression(-log[10](italic(p)))) + 
   scale_y_continuous(expand = c(0, 1.5) ) 
 
-ggsave(fig_S8, filename = paste("figures/p1_Supp_Fig8_abz_manh.png",sep = ""), units = "mm",height = 90, width = 170)
+ggsave(fig_S6, filename = paste("figures/p1_Supp_Fig6_abz_manh.png",sep = ""), units = "mm",height = 90, width = 170)
 
 
 
@@ -1277,24 +1036,21 @@ ggsave(fig_S8, filename = paste("figures/p1_Supp_Fig8_abz_manh.png",sep = ""), u
 
  
 
-#### Figure S9 ####
+#### Figure S7 ####
 
 # RIAILs eQTL map  
+data_figS7 <- data.table::fread("processed_data/FileS15_RIAILs_eQTL.tsv")   
 
-data_figS19 <- data.table::fread("processed_data/FileS19_RIAILs_eQTL.tsv")  
+data_figS7$gene_Chr[data_figS7$gene_Chr=="MtDNA"] <- "M"
+data_figS7$RILe_chr[data_figS7$RILe_chr=="MtDNA"] <- "M"
 
-
-
-data_figS19$gene_Chr[data_figS19$gene_Chr=="MtDNA"] <- "M"
-data_figS19$RILe_chr[data_figS19$RILe_chr=="MtDNA"] <- "M"
-
-data_figS19$Chr_pos<- factor(data_figS19$gene_Chr,levels = c("M","X","V","IV","III","II","I"))
-data_figS19$eChr_pos<- factor(data_figS19$RILe_chr,levels = c("I","II","III","IV","V","X","M"))
+data_figS7$Chr_pos<- factor(data_figS7$gene_Chr,levels = c("M","X","V","IV","III","II","I"))
+data_figS7$eChr_pos<- factor(data_figS7$RILe_chr,levels = c("I","II","III","IV","V","X","M"))
 
 
-fig_S9a <- ggplot()  + 
-  geom_point(data=subset(data_figS19,is.na(Detected_in_WIeQTL) ), aes(x=RILe_peak/1E6,y=gene_start,color=RILeQTL_classification),size=0.25,alpha=0.5)+ 
-   geom_point(data=subset(data_figS19,Detected_in_WIeQTL=="Yes"), aes(x=RILe_peak/1E6,y=gene_start ,fill=RILeQTL_classification),color="black", alpha=0.5,shape=25) +
+fig_S7a <- ggplot()  + 
+  geom_point(data=subset(data_figS7,is.na(Detected_in_WIeQTL) ), aes(x=RILe_peak/1E6,y=gene_start,color=RILeQTL_classification),size=0.25,alpha=0.5)+ 
+   geom_point(data=subset(data_figS7,Detected_in_WIeQTL=="Yes"), aes(x=RILe_peak/1E6,y=gene_start ,fill=RILeQTL_classification),color="black", alpha=0.5,shape=25) +
   scale_color_manual(values = c("Distant eQTL"="plum4","Local eQTL"="gold2")) +
   scale_fill_manual(values = c("Distant eQTL"="plum4","Local eQTL"="gold2")) +
   facet_grid(cols=vars(eChr_pos), rows=vars(Chr_pos), 
@@ -1313,21 +1069,19 @@ fig_S9a <- ggplot()  +
   labs(fill="eQTL classification")
 #fig_S10a
 
-Sgt = ggplot_gtable(ggplot_build(fig_S9a))
+Sgt = ggplot_gtable(ggplot_build(fig_S7a))
 
  
 Sgt$heights[7] = 0.3*Sgt$heights[9]
 
 
-fig_S9a_gt <- ggplotify::as.ggplot(Sgt) 
+fig_S7a_gt <- ggplotify::as.ggplot(Sgt) 
 
 
 # RIAILs hotspots
 
-
-
-
-RILhotspot_pos <- data_figS19 %>% 
+ 
+RILhotspot_pos <- data_figS7 %>% 
   dplyr::filter(!is.na(RILHotspot)) %>% 
   dplyr::mutate( Merged_RILHotspots_cM=ifelse(is.na(Merged_RILHotspots_cM) ,RILhotspot_cM,Merged_RILHotspots_cM),
                  merged_RILHotspots_QTL_count=ifelse(is.na(merged_RILHotspots_QTL_count) , RILHotspot_QTL_count,merged_RILHotspots_QTL_count))  %>% 
@@ -1340,7 +1094,7 @@ RILhotspot_pos <- data_figS19 %>%
   dplyr::mutate(hotPOS=ifelse(is.na(hotPOS),"no",hotPOS))
 
 
-fig_S9b <- ggplot(RILhotspot_pos,aes(x=merged_Hotspot_center,y=merged_RILHotspots_QTL_count)) +
+fig_S7b <- ggplot(RILhotspot_pos,aes(x=merged_Hotspot_center,y=merged_RILHotspots_QTL_count)) +
   geom_bar(stat='identity',
            aes(color=hotPOS),size=0.5) +
   facet_grid(.~RILhotspot_Chr,scales = "free_x" ) +
@@ -1358,7 +1112,7 @@ fig_S9b <- ggplot(RILhotspot_pos,aes(x=merged_Hotspot_center,y=merged_RILHotspot
   scale_x_continuous(breaks =  c(0, 15, 30, 45), limits = c(0,NA) ) 
  
  
-fig_S9 <- cowplot::plot_grid(fig_S9a_gt, fig_S9b,  
+fig_S7 <- cowplot::plot_grid(fig_S7a_gt, fig_S7b,  
                              labels = c('a', 'b'  ), 
                              label_size = 12, 
                              label_fontfamily="Helvetica",
@@ -1368,17 +1122,17 @@ fig_S9 <- cowplot::plot_grid(fig_S9a_gt, fig_S9b,
                             #   axis = "lr",
                              nrow = 2)
 
-ggsave(fig_S9, filename = paste("figures/p1_Supp_Fig9_RIAILs_eQTL.png",sep = ""), units = "mm",height = 160, width = 120)
+ggsave(fig_S7, filename = paste("figures/p1_Supp_Fig7_RIAILs_eQTL.png",sep = ""), units = "mm",height = 160, width = 120)
 
 
 
-#### Figure S10 ####
+#### Figure S8 ####
 
 data_fig2a <- data.table::fread("processed_data/FileS4_eQTLmap.tsv")  
 
-data_figS20 <- data.table::fread("processed_data/FileS20_eqtlStudies13_Wi207eQTL_common.tsv")  
+data_figS8 <- data.table::fread("processed_data/FileS16_eqtlStudies13_Wi207eQTL_common.tsv")  
 
-data_figS20_count <- data_figS20 %>% 
+data_figS8_count <- data_figS8 %>% 
   dplyr::distinct( ens_gene,transcript, eQTL_Chr,eQTL_peak,study) %>% 
   dplyr::group_by(ens_gene,transcript, eQTL_Chr,eQTL_peak ) %>% 
   dplyr::count(name = "study_count")  %>% 
@@ -1386,14 +1140,14 @@ data_figS20_count <- data_figS20 %>%
   dplyr::mutate(study_count=study_count+1)
 
 
-data_figS20_count$transcript_Chr[data_figS20_count$transcript_Chr=="MtDNA"] <- "M"
-data_figS20_count$eQTL_Chr[data_figS20_count$eQTL_Chr=="MtDNA"] <- "M"
+data_figS8_count$transcript_Chr[data_figS8_count$transcript_Chr=="MtDNA"] <- "M"
+data_figS8_count$eQTL_Chr[data_figS8_count$eQTL_Chr=="MtDNA"] <- "M"
 
-data_figS20_count$Chr_pos<- factor(data_figS20_count$transcript_Chr,levels = c("M","X","V","IV","III","II","I"))
-data_figS20_count$eChr_pos<- factor(data_figS20_count$eQTL_Chr,levels = c("I","II","III","IV","V","X","M"))
+data_figS8_count$Chr_pos<- factor(data_figS8_count$transcript_Chr,levels = c("M","X","V","IV","III","II","I"))
+data_figS8_count$eChr_pos<- factor(data_figS8_count$eQTL_Chr,levels = c("I","II","III","IV","V","X","M"))
 
 
-fig_S10 <- ggplot(data=data_figS20_count)  + 
+fig_S8 <- ggplot(data=data_figS8_count)  + 
   geom_point(aes(x=eQTL_peak/1E6,y=transcript_start,color=eQTL_classification,size=study_count),alpha=0.5) +
   scale_color_manual(values = c("Distant eQTL"="plum4","Local eQTL"="gold2"), name="eQTL classification") +
   facet_grid(cols=vars(eChr_pos), rows=vars(Chr_pos), 
@@ -1409,7 +1163,7 @@ fig_S10 <- ggplot(data=data_figS20_count)  +
   scale_size_continuous(breaks=seq(2, 14, 3),name="Number of detections\nin 14 conditions\nacross nine studies" )
 
 
-ggsave(fig_S10, filename = paste("figures/p1_Supp_Fig10_eQTLacrossStudies.png",sep = ""), units = "mm",height = 130, width = 170)
+ggsave(fig_S8, filename = paste("figures/p1_Supp_Fig8_eQTLacrossStudies.png",sep = ""), units = "mm",height = 130, width = 170)
 
 
 
