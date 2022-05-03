@@ -108,6 +108,7 @@ medaplot <- function (trait){
                                                                                         y=mediation_estimate,
                                                                                         color =  q99_mediator ),  
                               label.size = NA, 
+                              size = 3,
                               segment.color = NA,
                               min.segment.length = unit(0, 'lines'), 
                               fill = NA,

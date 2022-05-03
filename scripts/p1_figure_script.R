@@ -374,7 +374,7 @@ fig_2 <- cowplot::plot_grid(fig_2cde, fig_2ab,
                             axis = "tb",
                             nrow =1)
 
-ggsave(fig_2, filename = paste("figures/p1_Fig_2.png",sep = ""), units = "mm",height = 170, width = 170)
+ggsave(fig_2, filename = paste("figures/p1_Fig_2.pdf",sep = ""), units = "mm",height = 170, width = 170)
 
 
 
@@ -416,7 +416,7 @@ fig_3 <- ggplot(hotspot_pos,aes(x=merged_Hotspot_center,y=merged_Hotspot_QTL_cou
    scale_x_continuous(breaks =  c(0, 15, 30, 45) ) 
 
 
-ggsave(fig_3, filename = paste("figures/p1_Fig_3.png",sep = ""), units = "mm",height = 60, width = 170)
+ggsave(fig_3, filename = paste("figures/p1_Fig_3.pdf",sep = ""), units = "mm",height = 60, width = 170)
 
 
 ##########################################
@@ -513,16 +513,20 @@ regressed_phe_2 <- regressed_phe_all %>%
                 pearson_p=ifelse(strain=="AB1",cor_pvalue_reg,NA))
 
 regressed_phe_cor <- dplyr::bind_rows(regressed_phe_1,regressed_phe_2)  %>% 
-  dplyr::mutate(pp="p")
+  dplyr::mutate(pp="p",rr="r")
  
 
 fig_4b <- ggplot() +
   geom_point(data=subset(regressed_phe_cor, ben1_prediction=="A"), aes(y=pheno,x=exp), color="gray75",size=0.3)+
   geom_point(data=subset(regressed_phe_cor, ben1_prediction!="A"), aes(y=pheno,x=exp,color= ben1_prediction) ,size=1 )+
-  geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Raw"), aes(label = paste("ρ",pearson_cor,sep = " : "), y=-136, x=3 ),color="gray6" ) +
-  geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Regressed"), aes(label = paste("ρ",pearson_cor,sep = " : "), y=-136, x=-0.3 ),color="gray6" )+ 
+  #geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Raw"), aes(label = paste("r",pearson_cor,sep = " : "), y=-136, x=3 ),color="gray6" ,parse = TRUE) +
+ # geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Regressed"), aes(label = paste("r",pearson_cor,sep = " : "), y=-136, x=-0.3 ),color="gray6" )+ 
+   geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Raw"), aes(label = paste0(": ",pearson_cor), y=-136, x=3 ),color="gray6"  ) +
+   geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Regressed"), aes(label = paste0(": ",pearson_cor), y=-136, x=-0.3 ),color="gray6" ) + 
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Raw"), aes(label = rr, y=-136, x=2.3,fontface=3 ),color="gray6"  ) +
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1" & type=="Regressed"), aes(label = rr, y=-136, x=-1,fontface=3 ),color="gray6"  )+ 
   geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Raw"), aes(label = paste0(": ",pearson_p ), y=-136, x=4.8 ),color="gray6" )+ 
-  geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Raw"), aes(label = pp, y=-136, x=4.2,fontface=3 ),color="gray6"  )+ 
+  geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Raw"), aes(label = pp, y=-136, x=4 ,fontface=3 ),color="gray6"  )+ 
   geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Regressed"), aes(label = paste0(": ",pearson_p ), y=-136, x=1.4 ),color="gray6" )+ 
   geom_text(data= subset(regressed_phe_cor, strain=="AB1"& type=="Regressed"), aes(label = pp, y=-136, x=0.8,fontface=3 ),color="gray6"  )+ 
   facet_grid(.~ type, scales = "free" )+
@@ -540,6 +544,9 @@ fig_4b <- ggplot() +
                        direction = "horizontal",nrow=5,
                        title.position = "top", title.hjust = 0.5
                      ))  
+ 
+
+
 #fig_4b
  
 ######## figure 4c reg mapping ########
@@ -595,8 +602,9 @@ fig_4 <- cowplot::plot_grid(fig_4a,fig_4b, fig_4c,
                             axis = "lr",
                              nrow = 3)
 
-ggsave(fig_4, filename = paste("figures/p1_Fig_4.png",sep = ""), units = "mm",height = 140, width = 140)
+ggsave(fig_4, filename = paste("figures/p1_Fig_4.pdf",sep = ""), units = "mm",height = 140,      width = 140)
 
+#ggsave(fig_4, filename = paste("figures/p1_Fig_4.png",sep = ""), units = "mm",height = 140,      width = 140)
 
 
 
@@ -783,7 +791,7 @@ fig_5  <- cowplot::plot_grid(fig_manh_med_abc,
 
 
 
-ggsave(fig_5, filename = paste("figures/p1_Fig_5.png",sep = ""), units = "mm",height = 190, width = 160)
+ggsave(fig_5, filename = paste("figures/p1_Fig_5.pdf",sep = ""), units = "mm",height = 190, width = 160)
 
 
 
